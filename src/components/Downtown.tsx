@@ -741,7 +741,7 @@ function Stadium() {
         </mesh>
       ))}
       {/* front entrance facade facing the fountain */}
-      <group position={[0, 0, R - 0.4]}>
+      <group position={[0, 0, R - 1.0]}>
         <mesh position={[0, 4.6, 0.6]} castShadow>
           <boxGeometry args={[11.5, 8.8, 1.2]} />
           <meshStandardMaterial map={wall} roughness={0.9} />
