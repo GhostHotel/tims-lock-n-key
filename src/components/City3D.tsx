@@ -8,6 +8,7 @@ import boardHaunted from "@/assets/whiteboard-haunted-house.png.asset.json";
 import boardIsland from "@/assets/whiteboard-island.webp.asset.json";
 import boardKite from "@/assets/whiteboard-kite.webp.asset.json";
 import * as THREE from "three";
+import { StreetArt } from "./StreetArt";
 import {
   BLOCK,
   BLOCK_HALF,
@@ -229,6 +230,9 @@ function City() {
       })}
       <Suspense fallback={null}>
         <EastdaleMall />
+      </Suspense>
+      <Suspense fallback={null}>
+        <StreetArt />
       </Suspense>
       {dashes.map(([x, z, v], i) => (
         <mesh
