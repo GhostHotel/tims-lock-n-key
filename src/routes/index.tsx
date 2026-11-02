@@ -183,8 +183,10 @@ function Game() {
       get state() {
         return { cash, rep, owned, phase: phase.k, rivals };
       },
-      minigame: (type: JobType, easy = false) =>
-        setPhase({ k: "working", job: { ...makeJob(Date.now(), 0), type }, easy }),
+      minigame: (type: JobType, easy = false) => {
+        const safeType: JobType = type in JOB_INFO ? type : "lockout";
+        setPhase({ k: "working", job: { ...makeJob(Date.now(), 0), type: safeType }, easy });
+      },
       dialog: () => setPhase({ k: "tim", line: TIM_LINES[0] ?? "" }),
       upgrade: () => setOwned((items) => [...new Set([...items, "van"])]),
       close: closeDialog,
@@ -751,10 +753,10 @@ function Game() {
             {phase.k === "working" && (
               <>
                 <h2 className="mb-1 font-display text-xl">
-                  {JOB_INFO[phase.job.type].icon} {phase.job.client}
+                  {(JOB_INFO[phase.job.type] ?? JOB_INFO.lockout).icon} {phase.job.client}
                 </h2>
                 <p className="mb-3 text-sm text-muted-foreground">
-                  {JOB_INFO[phase.job.type].desc} · {phase.job.address}
+                  {(JOB_INFO[phase.job.type] ?? JOB_INFO.lockout).desc} · {phase.job.address}
                 </p>
                 {JOB_MINIGAME[phase.job.type] === "pins" && (
                   <LockPick
