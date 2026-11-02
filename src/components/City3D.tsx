@@ -1054,6 +1054,7 @@ export function City3D(props: Props) {
       }}
       camera={{ fov: 55, position: [-10, 8, 13] }}
     >
+      <SteadySceneClock />
       <Sky />
       <Environment resolution={64}>
         <Lightformer intensity={2} position={[0, 5, 0]} scale={[10, 10, 1]} />

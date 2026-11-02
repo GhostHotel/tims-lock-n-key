@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { rainIntensity } from "@/lib/game";
 import { GRAPHICS } from "@/lib/graphics";
+import { sceneTime } from "@/components/City3D";
 
 /** One bounded draw call; no particle meshes, allocations or React updates per frame. */
 export function CityWeather() {
@@ -37,7 +38,7 @@ export function CityWeather() {
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     Object.assign(window, { __weather: {
-      setTime: (seconds: number) => { if (Number.isFinite(seconds) && seconds >= 0) clock.elapsedTime = seconds; },
+      setTime: (seconds: number) => { if (Number.isFinite(seconds) && seconds >= 0) { clock.elapsedTime = seconds; sceneTime.seconds = seconds; } },
       get state() {
         let road: { roughness: number; metalness: number } | undefined;
         scene.traverse((object) => {
