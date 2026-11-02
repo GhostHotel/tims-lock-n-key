@@ -95,7 +95,7 @@ export function StreetArt() {
         <mesh key={s.key} position={s.pos} rotation-y={s.rotY}>
           <planeGeometry args={[s.w, s.h]} />
           <meshStandardMaterial
-            map={textures[s.key]}
+            map={textures[s.key] ?? null}
             alphaMap={mask}
             transparent
             opacity={0.9}
@@ -115,7 +115,7 @@ export function StreetArt() {
           </mesh>
           <mesh position={[0, 0, 0.105]}>
             <planeGeometry args={[3.8, 5.6]} />
-            <meshStandardMaterial map={textures[PIECES.length]} roughness={0.45} polygonOffset polygonOffsetFactor={-2} />
+            <meshStandardMaterial map={textures[PIECES.length] ?? null} roughness={0.45} polygonOffset polygonOffsetFactor={-2} />
           </mesh>
         </group>
       )}
