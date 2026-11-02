@@ -49,7 +49,7 @@ import { SIGNAL_JUNCTIONS, signalFacing, isRedViolation } from "@/lib/game";
 import { engine } from "@/lib/sfx";
 import { resetGameInput, setDrivingKey, type DrivingInput } from "@/lib/driving-input";
 import { timAnimationState } from "@/lib/game";
-import { GRAPHICS } from "@/lib/graphics";
+import { GRAPHICS, sceneTime } from "@/lib/graphics";
 import { CityEffects } from "@/components/CityEffects";
 import { CityWeather } from "@/components/CityWeather";
 import { rainIntensity } from "@/lib/game";
