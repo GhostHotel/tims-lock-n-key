@@ -1,0 +1,33 @@
+# Roadmap
+- [ ] Eastdale Mall down the street from parking, connected circular road, ordinary random dispatch and verification
+- [x] Intermittent camera-local rain after first nightfall, subtle lens droplets, wet road materials and no-MSAA antialiasing; 44 tests passed and dry/rain/clear rendering verified
+- [x] Upgrade materials/maps, HDR environment, lightweight shadows, bloom/SSAO/SMAA
+- [x] Full static analysis and logic simulation of combined changes
+- [x] Smooth minigame animation loops and transitions
+- [x] Sync Tim reward availability with his visible smoking animation
+- [x] Reset sticky driving controls on every dialog/job/prompt close
+- [x] Allow driving over curbs and grass while retaining building collisions
+- [x] Four uploaded radio tracks, independent radio toggle and continuous ambient/engine audio
+- [x] Playback fixes: easier extraction, safe dial alignment and narrower wedge, RJ, nonselectable buttons, correct/sparser signals, upgraded black van with flames, opaque dialogs, manual save, more detailed graphics
+- [x] Make the game 3D (drivable van, city, shop)
+- [x] Office inside the shop: man at a desk, user's picture on a whiteboard
+- [x] Smoother corners for the van
+- [x] Tim smoking in a parking lot next to the shop (20s smoke cycle, 25s easy-minigame tip)
+- [x] Light traffic + traffic lights (10s cycle, $50 red-light fine)
+- [x] Jimmy the golfer (-$50, relocates every 2 min)
+- [x] Pops with temper meter (>50 = grounded at shop 2 min)
+
+# Current batch
+- [ ] Traffic lights on dedicated poles with real green→yellow→red cycle (2s yellow, fine only on red)
+- [x] Solid dialog boxes (no 3D labels showing through)
+- [ ] Tim: 5 rotating encouraging lines; bonus only while smoking, otherwise "busy" line
+- [ ] Pops dialog (angry when grounding / friendly) and Jimmy dialog referencing the $50 + job type
+- [ ] Van back: key logo + "Tim's Lock and Key"; rename business everywhere
+- [ ] Nate label at the desk; Aaron pacing in the office on the phone with 3s chat bubbles
+- [ ] 10-minute overall game timer; most money wins (vs Taylor & Slade)
+- [ ] Rival technicians Taylor & Slade: take jobs, cut keys, red-light fines + Pops grounding, fair odds
+- [ ] 2 new minigames: key extraction (broken lock) + safe dial (safe crack)
+- [ ] Whiteboard picture cycles every 4 min (placeholders until Matt provides photos)
+- [x] Save progress (cash/reputation/upgrades survive refresh)
+- [ ] Sound effects (engine, pin clicks, snap, payout, fines, phone)
+- [ ] Day/night cycle with headlights and lit windows
