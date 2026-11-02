@@ -399,8 +399,13 @@ export const BUILDING_COLLIDERS = [
   ...LOTS.map((lot) =>
     lot.client === MALL.name
       ? { x: MALL.x, z: MALL.z, halfX: MALL.halfX, halfZ: MALL.halfZ }
-      : { x: lot.cx, z: lot.cz + 1, halfX: 4, halfZ: 3.5 },
+      : lot.kind === "stadium"
+        ? { x: lot.cx, z: lot.cz, halfX: STADIUM.radius, halfZ: STADIUM.radius + 0.6 }
+        : lot.kind === "tower"
+          ? { x: lot.cx, z: lot.cz, halfX: 5, halfZ: 5 }
+          : { x: lot.cx, z: lot.cz + 1, halfX: 4, halfZ: 3.5 },
   ),
+  { x: FOUNTAIN.x, z: FOUNTAIN.z, halfX: FOUNTAIN.basin - 0.6, halfZ: FOUNTAIN.basin - 0.6 },
 ];
 export function buildingPush(x: number, z: number, radius = 1.1) {
   for (const box of BUILDING_COLLIDERS) {
@@ -428,10 +433,12 @@ export function buildingPush(x: number, z: number, radius = 1.1) {
 }
 /** A short smooth ramp lets wheels climb the visual curb without a hard bump. */
 export function drivingSurfaceHeight(x: number, z: number) {
-  const mallDistance = Math.hypot(x - MALL.x, z - MALL.z);
-  if (mallDistance <= MALL.roadOuter) {
-    const ramp = Math.max(0, Math.min(1, (MALL.roadInner - mallDistance) / 0.8));
-    return 0.24 * ramp * ramp * (3 - 2 * ramp);
+  for (const ring of ROUNDABOUTS) {
+    const distance = Math.hypot(x - ring.x, z - ring.z);
+    if (distance <= ring.roadOuter) {
+      const ramp = Math.max(0, Math.min(1, (ring.roadInner - distance) / 0.8));
+      return 0.24 * ramp * ramp * (3 - 2 * ramp);
+    }
   }
   const cx = Math.round(x / BLOCK) * BLOCK,
     cz = Math.round(z / BLOCK) * BLOCK;
