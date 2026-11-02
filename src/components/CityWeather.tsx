@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { rainIntensity } from "@/lib/game";
 import { GRAPHICS } from "@/lib/graphics";
-import { sceneTime } from "@/components/City3D";
+import { sceneTime } from "@/lib/graphics";
 
 /** One bounded draw call; no particle meshes, allocations or React updates per frame. */
 export function CityWeather() {

@@ -1461,3 +1461,12 @@ function TrafficLights() {
     </group>
   );
 }
+
+/** Scene time survives dialogs, paused frames and canvas remounts, and never jumps. */
+function SteadySceneClock() {
+  useFrame(({ clock }, delta) => {
+    sceneTime.seconds += Math.min(delta, 0.05);
+    clock.elapsedTime = sceneTime.seconds;
+  }, -100);
+  return null;
+}
