@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Downtown district: 8 towers, storefronts, fountain roundabout, park, Riverwalk Stadium with Biscuits signage; rivals drive matching vans
 - [ ] Eastdale Mall down the street from parking, connected circular road, ordinary random dispatch and verification
 - [x] Intermittent camera-local rain after first nightfall, subtle lens droplets, wet road materials and no-MSAA antialiasing; 44 tests passed and dry/rain/clear rendering verified
 - [x] Upgrade materials/maps, HDR environment, lightweight shadows, bloom/SSAO/SMAA
