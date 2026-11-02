@@ -49,7 +49,7 @@ import { SIGNAL_JUNCTIONS, signalFacing, isRedViolation } from "@/lib/game";
 import { engine } from "@/lib/sfx";
 import { resetGameInput, setDrivingKey, type DrivingInput } from "@/lib/driving-input";
 import { timAnimationState } from "@/lib/game";
-import { GRAPHICS } from "@/lib/graphics";
+import { GRAPHICS, sceneTime } from "@/lib/graphics";
 import { CityEffects } from "@/components/CityEffects";
 import { CityWeather } from "@/components/CityWeather";
 import { rainIntensity } from "@/lib/game";
@@ -1054,6 +1054,7 @@ export function City3D(props: Props) {
       }}
       camera={{ fov: 55, position: [-10, 8, 13] }}
     >
+      <SteadySceneClock />
       <Sky />
       <Environment resolution={64}>
         <Lightformer intensity={2} position={[0, 5, 0]} scale={[10, 10, 1]} />
@@ -1459,4 +1460,13 @@ function TrafficLights() {
       ))}
     </group>
   );
+}
+
+/** Scene time survives dialogs, paused frames and canvas remounts, and never jumps. */
+function SteadySceneClock() {
+  useFrame(({ clock }, delta) => {
+    sceneTime.seconds += Math.min(delta, 0.05);
+    clock.elapsedTime = sceneTime.seconds;
+  }, -100);
+  return null;
 }

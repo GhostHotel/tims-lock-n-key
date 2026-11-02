@@ -22,3 +22,6 @@ export const GRAPHICS = {
   rainSpeed: 18,
   rainColor: "#b6ccd3",
 } as const;
+
+/** Shared scene clock for daylight and weather; persists across canvas remounts. */
+export const sceneTime = { seconds: 0 };
