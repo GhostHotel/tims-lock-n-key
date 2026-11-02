@@ -9,6 +9,7 @@ import boardIsland from "@/assets/whiteboard-island.webp.asset.json";
 import boardKite from "@/assets/whiteboard-kite.webp.asset.json";
 import * as THREE from "three";
 import { StreetArt } from "./StreetArt";
+import { Downtown } from "./Downtown";
 import {
   BLOCK,
   BLOCK_HALF,
@@ -18,6 +19,7 @@ import {
   JIMMY_RESPAWN,
   JOB_INFO,
   LOTS,
+  ROUNDABOUTS,
   MALL,
   BUILDING_COLLIDERS,
   PARKING,
@@ -175,7 +177,9 @@ function City() {
         d.push([s, line, false]);
       }
     }
-    return d.filter(([x, z]) => Math.hypot(x - MALL.x, z - MALL.z) > MALL.roadOuter);
+    return d.filter(([x, z]) =>
+      ROUNDABOUTS.every((ring) => Math.hypot(x - ring.x, z - ring.z) > ring.roadOuter),
+    );
   }, []);
   const winMat = useMemo(
     () =>
@@ -245,7 +249,8 @@ function City() {
           <meshBasicMaterial color="#e8d9a8" />
         </mesh>
       ))}
-      {LOTS.filter((l) => l.client !== MALL.name).map((l, i) => (
+      <Downtown roadMaterial={roadMaterial} />
+      {LOTS.filter((l) => l.client !== MALL.name && l.kind !== "tower" && l.kind !== "stadium").map((l, i) => (
         <group key={i} position={[l.cx, 0, l.cz]}>
           <mesh position={[0, 0.12, 0]} receiveShadow>
             <boxGeometry args={[BLOCK_HALF * 2, 0.24, BLOCK_HALF * 2]} />
@@ -727,7 +732,7 @@ function Sim({
         lane: (ROAD_LINES[i] ?? 10) + (i ? 1.6 : -1.6),
         pos: -WORLD_HALF + i * 40,
         v: CAR_SPEED,
-        color: ["#4f8fb0", "#b06bd4", "#5aaf82"][i] ?? "#5aaf82",
+        color: ["#2f6fd8", "#d23b3b", "#2fa36a"][i] ?? "#2fa36a",
       })),
     [],
   );
@@ -932,8 +937,10 @@ function Sim({
             rivalRefs.current[i] = g;
           }}
         >
-          <TrafficCar color={c.color} gref={() => {}} />
-          <Label name={RIVAL_NAMES[i]!} y={2.5} color="bg-primary text-primary-foreground" />
+          <Suspense fallback={null}>
+            <DeliveryModel upgraded={false} tint={c.color} />
+          </Suspense>
+          <Label name={RIVAL_NAMES[i]!} y={3.4} color="bg-primary text-primary-foreground" />
         </group>
       ))}
       <group ref={jimG}>

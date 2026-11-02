@@ -67,7 +67,7 @@ export function StreetArt() {
   }, [textures]);
 
   const spots = useMemo(() => {
-    const lots = LOTS.filter((l) => l.client !== MALL.name && l !== POSTER_LOT && l.h >= 4);
+    const lots = LOTS.filter((l) => l.client !== MALL.name && (!l.kind || l.kind === "storefront") && l !== POSTER_LOT && l.h >= 4);
     const stride = lots.length / PIECES.length;
     return PIECES.map((p, i) => {
       const lot = lots[Math.floor(i * stride + stride / 2) % lots.length]!;

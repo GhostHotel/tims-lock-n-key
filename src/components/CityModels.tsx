@@ -11,7 +11,7 @@ export function useCityModels() {
   useGLTF(treeAsset.url);
 }
 
-export function DeliveryModel({ upgraded }: { upgraded: boolean }) {
+export function DeliveryModel({ upgraded, tint }: { upgraded: boolean; tint?: string }) {
   const { scene } = useGLTF(vanAsset.url);
   const surfaces = useSurfaceMaps();
   const model = useMemo(() => {
@@ -33,13 +33,15 @@ export function DeliveryModel({ upgraded }: { upgraded: boolean }) {
           }
           if (upgraded && (object.name === "body" || object.name === "door"))
             material.color.set("#191b20");
+          else if (tint && (object.name === "body" || object.name === "door"))
+            material.color.set(tint);
           return material;
         },
       );
       object.material = Array.isArray(object.material) ? materials : materials[0];
     });
     return copy;
-  }, [scene, upgraded, surfaces]);
+  }, [scene, upgraded, surfaces, tint]);
   return (
     <group>
       <primitive object={model} scale={1.3} />

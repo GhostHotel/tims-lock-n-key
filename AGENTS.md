@@ -24,3 +24,4 @@
 - Keep Three.js and its types on the compatible r180 minor: later releases remove PCFSoftShadowMap, which the requested lightweight shadow pipeline uses.
 - Weather timing is a pure game rule driven by the same scene clock as daylight; camera-local rain uses one pooled line buffer, and lens droplets run inside the composer below DOM HUD with no CSS blur or dynamic cube captures.
 - Dev-only window.__weather.setTime(seconds) advances the shared scene clock for dry/rain transition checks; window.__weather.state reports particle visibility and camera-local positioning.
+- Downtown layout (towers, fountain roundabout, park, stadium) is declared in src/lib/game.ts and drawn by src/components/Downtown.tsx; roundabouts share the ROUNDABOUTS list so terrain, dashes and colliders stay aligned.

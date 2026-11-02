@@ -54,6 +54,46 @@ export const MALL = {
   doorZ: 9,
 } as const;
 
+/** Downtown: north-west blocks. Fountain roundabout at its heart, park across the street. */
+export const FOUNTAIN = {
+  name: "Court Square Fountain",
+  x: -40,
+  z: -40,
+  roadInner: 8,
+  roadOuter: 12.5,
+  basin: 5,
+} as const;
+export const DOWNTOWN_PARK = { x: -20, z: -40 } as const;
+export const STADIUM = {
+  name: "Riverwalk Stadium",
+  subtitle: "Home of the Biscuits",
+  x: -40,
+  z: -60,
+  radius: 6.4,
+  height: 7,
+} as const;
+export const TOWER_BLOCKS: [number, number][] = [
+  [-60, -60],
+  [-20, -60],
+  [0, -60],
+  [-60, -40],
+  [0, -40],
+  [-60, -20],
+  [-40, -20],
+  [-20, -20],
+];
+export const TOWER_NAMES = [
+  "Commerce Tower",
+  "Riverfront Plaza",
+  "Dexter Center",
+  "Alabama One",
+  "Union Station Tower",
+  "Capitol Bank Bldg",
+  "Lanier Tower",
+  "Court Square Tower",
+];
+const STOREFRONT_BLOCKS = ["0,-20", "-60,0", "-40,0", "-20,0", "20,-20", "20,-40", "20,-60"];
+
 const STREETS = ["Elm St", "Harbor Rd", "5th Ave", "Maple Ct", "Union Sq", "Birch Ln", "Canal St"];
 export interface Lot {
   cx: number;
@@ -63,6 +103,7 @@ export interface Lot {
   door: { x: number; z: number };
   address: string;
   client?: string;
+  kind?: "tower" | "storefront" | "stadium";
 }
 const COLORS = [
   "#c9774f",
@@ -74,19 +115,33 @@ const COLORS = [
   "#a8836a",
   "#cfa0a0",
 ];
+const TOWER_COLORS = ["#6f8796", "#8a9aa3", "#5b6f7d", "#9aa7a8", "#7d8a99", "#a39a8c", "#64798a", "#8c9fb0"];
 export const LOTS: Lot[] = [];
 for (let i = -GRID; i <= GRID; i++)
   for (let j = -GRID; j <= GRID; j++) {
     if ((i === 0 || i === 1 || i * BLOCK === MALL.x) && j === 0) continue; // shop, parking, mall
+    const cx = i * BLOCK,
+      cz = j * BLOCK;
+    if (cx === FOUNTAIN.x && cz === FOUNTAIN.z) continue;
+    if (cx === DOWNTOWN_PARK.x && cz === DOWNTOWN_PARK.z) continue;
+    if (cx === STADIUM.x && cz === STADIUM.z) continue;
     const k = Math.abs(i * 7 + j * 13);
-    LOTS.push({
-      cx: i * BLOCK,
-      cz: j * BLOCK,
+    const tower = TOWER_BLOCKS.findIndex(([x, z]) => x === cx && z === cz);
+    const lot: Lot = {
+      cx,
+      cz,
       h: 3 + (k % 6) * 1.6,
       color: COLORS[k % COLORS.length]!,
-      door: { x: i * BLOCK, z: j * BLOCK + 9 },
+      door: { x: cx, z: cz + 9 },
       address: `${100 + k * 11} ${STREETS[(i + GRID) % STREETS.length]!}`,
-    });
+    };
+    if (tower >= 0) {
+      lot.kind = "tower";
+      lot.h = 30 + ((tower * 7) % 5) * 6;
+      lot.color = TOWER_COLORS[tower]!;
+      lot.address = TOWER_NAMES[tower]!;
+    } else if (STOREFRONT_BLOCKS.includes(`${cx},${cz}`)) lot.kind = "storefront";
+    LOTS.push(lot);
   }
 LOTS.push({
   cx: MALL.x,
@@ -97,6 +152,17 @@ LOTS.push({
   address: MALL.name,
   client: MALL.name,
 });
+LOTS.push({
+  cx: STADIUM.x,
+  cz: STADIUM.z,
+  h: STADIUM.height,
+  color: "#b8584a",
+  door: { x: STADIUM.x, z: STADIUM.z + 9 },
+  address: STADIUM.name,
+  client: STADIUM.name,
+  kind: "stadium",
+});
+export const ROUNDABOUTS = [MALL, FOUNTAIN] as const;
 
 const NAMES = [
   "Mrs. Patel",
@@ -333,8 +399,13 @@ export const BUILDING_COLLIDERS = [
   ...LOTS.map((lot) =>
     lot.client === MALL.name
       ? { x: MALL.x, z: MALL.z, halfX: MALL.halfX, halfZ: MALL.halfZ }
-      : { x: lot.cx, z: lot.cz + 1, halfX: 4, halfZ: 3.5 },
+      : lot.kind === "stadium"
+        ? { x: lot.cx, z: lot.cz, halfX: STADIUM.radius, halfZ: STADIUM.radius + 0.6 }
+        : lot.kind === "tower"
+          ? { x: lot.cx, z: lot.cz, halfX: 5, halfZ: 5 }
+          : { x: lot.cx, z: lot.cz + 1, halfX: 4, halfZ: 3.5 },
   ),
+  { x: FOUNTAIN.x, z: FOUNTAIN.z, halfX: FOUNTAIN.basin - 0.6, halfZ: FOUNTAIN.basin - 0.6 },
 ];
 export function buildingPush(x: number, z: number, radius = 1.1) {
   for (const box of BUILDING_COLLIDERS) {
@@ -362,10 +433,12 @@ export function buildingPush(x: number, z: number, radius = 1.1) {
 }
 /** A short smooth ramp lets wheels climb the visual curb without a hard bump. */
 export function drivingSurfaceHeight(x: number, z: number) {
-  const mallDistance = Math.hypot(x - MALL.x, z - MALL.z);
-  if (mallDistance <= MALL.roadOuter) {
-    const ramp = Math.max(0, Math.min(1, (MALL.roadInner - mallDistance) / 0.8));
-    return 0.24 * ramp * ramp * (3 - 2 * ramp);
+  for (const ring of ROUNDABOUTS) {
+    const distance = Math.hypot(x - ring.x, z - ring.z);
+    if (distance <= ring.roadOuter) {
+      const ramp = Math.max(0, Math.min(1, (ring.roadInner - distance) / 0.8));
+      return 0.24 * ramp * ramp * (3 - 2 * ramp);
+    }
   }
   const cx = Math.round(x / BLOCK) * BLOCK,
     cz = Math.round(z / BLOCK) * BLOCK;
