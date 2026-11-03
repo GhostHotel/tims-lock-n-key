@@ -14,13 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leaderboard_scores: {
+        Row: {
+          achieved_at: string
+          difficulty: string
+          display_name: string
+          score: number
+          technician: string
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          difficulty: string
+          display_name: string
+          score: number
+          technician: string
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          difficulty?: string
+          display_name?: string
+          score?: number
+          technician?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      match_sessions: {
+        Row: {
+          difficulty: string
+          finished_at: string | null
+          id: string
+          player_count: number
+          score: number | null
+          started_at: string
+          technician: string
+          user_id: string
+        }
+        Insert: {
+          difficulty: string
+          finished_at?: string | null
+          id?: string
+          player_count: number
+          score?: number | null
+          started_at?: string
+          technician: string
+          user_id: string
+        }
+        Update: {
+          difficulty?: string
+          finished_at?: string | null
+          id?: string
+          player_count?: number
+          score?: number | null
+          started_at?: string
+          technician?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      finish_ranked_match: {
+        Args: { p_display_name: string; p_match_id: string; p_score: number }
+        Returns: number
+      }
+      start_ranked_match: {
+        Args: {
+          p_difficulty: string
+          p_player_count: number
+          p_technician: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
