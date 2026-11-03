@@ -3,6 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { timAnimationState } from "@/lib/game";
 import { Route } from "@/routes/index";
 
+vi.mock("@tanstack/react-start", () => ({ useServerFn: () => vi.fn() }));
+vi.mock("@/lib/leaderboard.functions", () => ({ finishRankedMatch: vi.fn() }));
+vi.mock("@/components/GameMenu", () => ({
+  GameMenu: ({ onStart }: { onStart: (config: object) => void }) => (
+    <button onClick={() => onStart({ technician: "Matt", playerCount: 4, difficulty: "medium", displayName: "Matt", rankedId: null })}>Start test match</button>
+  ),
+}));
+
 vi.mock("@/components/City3D", () => ({
   City3D: ({ onEvent }: { onEvent: (event: string) => void }) => (
     <button onClick={() => onEvent("tim")}>Visit Tim</button>
@@ -30,6 +38,7 @@ describe("Tim's visible smoking state", () => {
     timAnimationState.smoking = true;
     const Game = Route.options.component as () => React.ReactNode;
     render(<Game />);
+    fireEvent.click(screen.getByText("Start test match"));
     fireEvent.click(screen.getByText("Visit Tim"));
     fireEvent.click(screen.getByText("Thanks, Tim"));
     expect(screen.getByText(/Tim's tip: reach a job/)).toBeTruthy();
@@ -38,6 +47,7 @@ describe("Tim's visible smoking state", () => {
     timAnimationState.smoking = false;
     const Game = Route.options.component as () => React.ReactNode;
     render(<Game />);
+    fireEvent.click(screen.getByText("Start test match"));
     fireEvent.click(screen.getByText("Visit Tim"));
     expect(screen.queryByText("Thanks, Tim")).toBeNull();
     fireEvent.click(screen.getByText("Catch you later, Tim"));

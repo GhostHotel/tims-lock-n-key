@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chooseRivals, TECHNICIANS, MAX_PLAYERS, LOADING_MS, DIFFICULTIES, pinTuning, dialTuning, effectiveDifficulty } from "@/lib/match";
+import { extractionTuning } from "@/lib/game";
 describe("Match selection rules", () => {
   it("allows only the six requested technicians", () => expect([...TECHNICIANS]).toEqual(["Matt", "Taylor", "Slade", "RJ", "Opy", "Kevin"]));
   it("caps total participants at four", () => { expect(MAX_PLAYERS).toBe(4); expect(chooseRivals("Matt", 99)).toHaveLength(3); });
@@ -12,4 +13,5 @@ describe("Match selection rules", () => {
   it("makes hard pins tight and single-attempt", () => { expect(pinTuning("hard").hi-pinTuning("hard").lo).toBeLessThan(0.1); expect(pinTuning("hard").tries).toBe(1); });
   it("makes safe dial thresholds follow difficulty", () => { expect(dialTuning("easy", 2).width).toBeGreaterThan(dialTuning("medium", 2).width); expect(dialTuning("hard", 2).width).toBeLessThan(dialTuning("medium", 2).width); expect(dialTuning("hard", 0).tries).toBe(1); });
   it("keeps Tim tips easier even in hard matches", () => expect(effectiveDifficulty("hard", true)).toBe("easy"));
+  it("makes easy extraction forgiving and hard extraction riskier", () => { const e = extractionTuning(false, "easy"), m = extractionTuning(false), h = extractionTuning(false, "hard"); expect(e.half).toBeGreaterThan(m.half); expect(e.risk).toBeLessThan(m.risk); expect(h.half).toBeLessThan(m.half); expect(h.risk).toBeGreaterThan(m.risk); });
 });

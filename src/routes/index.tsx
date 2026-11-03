@@ -331,7 +331,7 @@ function Game({ config, onExit }: { config: MatchConfig; onExit: () => void }) {
     if (claimed.size) setJobs((js) => js.filter((j) => !claimed.has(j.id)));
 
     // match timer
-    if (startedAt.current && now >= startedAt.current + GAME_MS && st.current.phase.k !== "over") {
+    if (startedAt.current && now >= startedAt.current + GAME_MS) {
       setPhase({ k: "over" });
     }
   }, [now, level, owned]);

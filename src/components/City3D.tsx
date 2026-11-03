@@ -77,7 +77,7 @@ const ACCEL = 20,
 const PARKED = [-6, -2, 2, 6].map((dx) => ({ x: PARKING.x + dx, z: PARKING.z - 3.5 }));
 
 interface Props {
-  technician?: Technician;
+  technician?: Technician | undefined;
   rivalNames?: readonly string[];
   jobs: Job[];
   targetId: number | null;
@@ -610,7 +610,7 @@ function Van({
   upgraded: boolean;
   input: React.MutableRefObject<Input>;
   paused: boolean;
-  technician?: Technician;
+  technician?: Technician | undefined;
 }) {
   const decal = useMemo(vanDecal, []);
   const flame = useRef<THREE.Group>(null);
@@ -636,7 +636,7 @@ function Van({
   return (
     <group ref={group}>
       <Suspense fallback={null}>
-        <DeliveryModel upgraded={upgraded} tint={technician ? TECHNICIAN_STYLE[technician].van : undefined} />
+        <DeliveryModel upgraded={upgraded} {...(technician ? { tint: TECHNICIAN_STYLE[technician].van } : {})} />
         {technician && <group position={[0.4, 0.45, 0.9]} scale={0.43}><TechnicianModel name={technician} seated /></group>}
       </Suspense>
       {[
