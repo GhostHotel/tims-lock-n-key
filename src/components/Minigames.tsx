@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { sfx } from "@/lib/sfx";
 import { Button } from "@/components/ui/button";
-import { extractionTuning, safeHit, safeWedgeWidth, stepExtraction } from "@/lib/game";
+import { extractionTuning, safeHit, stepExtraction } from "@/lib/game";
+import { dialTuning, type Difficulty } from "@/lib/match";
 import { useGameFrame } from "@/hooks/use-game-frame";
 
 // ---------- Broken lock: pull the snapped key out, steady hands ----------
 export function KeyExtract({
   onDone,
   easy = false,
+  difficulty = "medium",
 }: {
   onDone: (ok: boolean) => void;
   easy?: boolean;
+  difficulty?: Difficulty;
 }) {
   const fragment = useRef<HTMLDivElement>(null);
   const fill = useRef<HTMLDivElement>(null);
@@ -20,7 +23,7 @@ export function KeyExtract({
   const finished = useRef(false);
   const holding = useRef(false);
   const st = useRef({ t: 0, progress: 0, risk: 0 });
-  const { speed, half } = extractionTuning(easy);
+  const { speed, half } = extractionTuning(easy, difficulty);
   const done = useRef(onDone);
   done.current = onDone;
 
@@ -30,7 +33,7 @@ export function KeyExtract({
     s.t += dt * speed;
     const p = (Math.sin(s.t) + Math.sin(s.t * 2.7) * 0.4 + 1.4) / 2.8;
     if (fragment.current) fragment.current.style.transform = `translateX(${p * 100}%)`;
-    Object.assign(s, stepExtraction(s.progress, s.risk, p, holding.current, dt, easy));
+    Object.assign(s, stepExtraction(s.progress, s.risk, p, holding.current, dt, easy, difficulty));
     if (fill.current) fill.current.style.transform = `scaleX(${s.progress / 100})`;
     if (riskFill.current) {
       riskFill.current.style.transform = `scaleX(${s.risk / 100})`;
@@ -135,9 +138,11 @@ export function KeyExtract({
 export function SafeDial({
   onDone,
   easy = false,
+  difficulty = "medium",
 }: {
   onDone: (ok: boolean) => void;
   easy?: boolean;
+  difficulty?: Difficulty;
 }) {
   const total = 3;
   const [stage, setStage] = useState(0);
@@ -146,7 +151,8 @@ export function SafeDial({
   const finished = useRef(false);
   const [zone, setZone] = useState(() => Math.random() * 360);
   const ang = useRef(0);
-  const speed = (easy ? 65 : 105) + stage * 45;
+  const tuning = dialTuning(difficulty, stage);
+  const speed = easy && difficulty === "medium" ? 65 + stage * 45 : tuning.speed;
 
   useGameFrame((dt) => {
     if (finished.current) return false;
@@ -156,7 +162,7 @@ export function SafeDial({
     return true;
   });
 
-  const width = safeWedgeWidth(stage);
+  const width = tuning.width;
   const tap = () => {
     if (finished.current) return;
     if (safeHit(ang.current, zone, width)) {
@@ -169,7 +175,7 @@ export function SafeDial({
       setZone(Math.random() * 360);
     } else {
       sfx.buzz();
-      if (strikes + 1 >= 3) {
+      if (strikes + 1 >= tuning.tries) {
         finished.current = true;
         return onDone(false);
       }
@@ -184,7 +190,7 @@ export function SafeDial({
           NUMBER {stage + 1}/{total}
         </span>
         <span>
-          TRIES {"▮".repeat(3 - strikes)}
+          TRIES {"▮".repeat(tuning.tries - strikes)}
           {"▯".repeat(strikes)}
         </span>
       </div>

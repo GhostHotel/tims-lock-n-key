@@ -324,13 +324,13 @@ export const isRedViolation = (axis: Axis, t: number, x: number, z: number) =>
   SIGNAL_JUNCTIONS.some((p) => p.x === x && p.z === z) && lightState(axis, t) === "red";
 
 // Minigame feel is shared by the animation and rule tests.
-export const extractionTuning = (easy: boolean) => ({
-  speed: easy ? 1.2 : 1.8,
-  half: easy ? 0.23 : 0.16,
-  pull: 34,
-  risk: easy ? 26 : 36,
-  recovery: 30,
-  slip: 0.5,
+export const extractionTuning = (easy: boolean, difficulty: "easy" | "medium" | "hard" = "medium") => ({
+  speed: difficulty === "easy" ? 0.8 : easy ? 1.2 : difficulty === "hard" ? 2.5 : 1.8,
+  half: difficulty === "easy" ? 0.36 : easy ? 0.23 : difficulty === "hard" ? 0.09 : 0.16,
+  pull: difficulty === "easy" ? 46 : difficulty === "hard" ? 26 : 34,
+  risk: difficulty === "easy" ? 12 : easy ? 26 : difficulty === "hard" ? 65 : 36,
+  recovery: difficulty === "hard" ? 20 : 30,
+  slip: difficulty === "hard" ? 1.5 : 0.5,
 });
 export function stepExtraction(
   progress: number,
@@ -339,8 +339,9 @@ export function stepExtraction(
   holding: boolean,
   dt: number,
   easy: boolean,
+  difficulty: "easy" | "medium" | "hard" = "medium",
 ) {
-  const tuning = extractionTuning(easy);
+  const tuning = extractionTuning(easy, difficulty);
   if (!holding)
     return {
       progress: Math.max(0, progress - tuning.slip * dt),
