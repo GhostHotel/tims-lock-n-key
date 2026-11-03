@@ -164,3 +164,10 @@
 .game-scene { isolation: isolate; }
 .game-scene[data-dialog-open="true"] canvas ~ div { visibility: hidden; }
 button, button * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+
+.menu-shell { background-image: radial-gradient(ellipse at 8% 0%, color-mix(in oklab, var(--success) 9%, transparent), transparent 65%); }
+.loading-caption { background: linear-gradient(transparent, var(--background)); }
+.loading-progress { appearance: none; border: 0; background: var(--muted); border-radius: 2px; }
+.loading-progress::-webkit-progress-bar { background: var(--muted); border-radius: 2px; }
+.loading-progress::-webkit-progress-value { background: var(--primary); border-radius: 2px; }
+.loading-progress::-moz-progress-bar { background: var(--primary); }
