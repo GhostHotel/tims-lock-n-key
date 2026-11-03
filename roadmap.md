@@ -1,4 +1,7 @@
 # Roadmap
+- [ ] Main menu, tutorial, six-technician selection and celebration, match setup, five-second uploaded loading screen
+- [ ] Configurable rival roster and three minigame difficulty levels; keep world inactive until playing
+- [ ] Real online top-10 high scores and end-to-end menu/match verification
 - [x] Downtown district: 8 towers, storefronts, fountain roundabout, park, Riverwalk Stadium with Biscuits signage; rivals drive matching vans
 - [ ] Eastdale Mall down the street from parking, connected circular road, ordinary random dispatch and verification
 - [x] Intermittent camera-local rain after first nightfall, subtle lens droplets, wet road materials and no-MSAA antialiasing; 44 tests passed and dry/rain/clear rendering verified
