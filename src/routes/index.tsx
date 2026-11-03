@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { GameMenu } from "@/components/GameMenu";
+import { chooseRivals, DIFFICULTIES, effectiveDifficulty, type MatchConfig, type MenuState } from "@/lib/match";
+import { finishRankedMatch } from "@/lib/leaderboard.functions";
 import {
   addTemper,
   BUSINESS,
@@ -16,10 +20,7 @@ import {
   randomLine,
   RED_FINE,
   RIVAL_CLAIM_CHANCE,
-  RIVAL_FAIL_CHANCE,
-  RIVAL_GROUND_CHANCE,
   RIVAL_NAMES,
-  RIVAL_RED_CHANCE,
   RIVAL_SPEED,
   RIVAL_WALKIN_CHANCE,
   TEMPER_FAIL,
@@ -62,7 +63,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: Game,
+  component: GameApp,
 });
 
 const SAVE_KEY = "tims-lock-key-save-v1";
@@ -105,13 +106,30 @@ function loadSave(): { cash: number; rep: number; owned: string[] } {
   return fresh;
 }
 
-function Game() {
+function GameApp() {
+  const [menuState, setMenuState] = useState<MenuState>("MAIN_MENU");
+  const [config, setConfig] = useState<MatchConfig | null>(null);
+  const start = useCallback((next: MatchConfig) => { setConfig(next); setMenuState("PLAYING"); }, []);
+  const exit = useCallback(() => { resetGameInput(); setMenuState("MAIN_MENU"); setConfig(null); }, []);
+  return menuState === "PLAYING" && config
+    ? <Game config={config} onExit={exit} />
+    : <GameMenu state={menuState === "PLAYING" ? "MAIN_MENU" : menuState} onState={setMenuState} onStart={start} />;
+}
+
+function Game({ config, onExit }: { config: MatchConfig; onExit: () => void }) {
+  const rivalNames = useMemo(() => chooseRivals(config.technician, config.playerCount), [config.technician, config.playerCount]);
+  const balance = DIFFICULTIES[config.difficulty];
+  const submitScore = useServerFn(finishRankedMatch);
+  const [scoreStatus, setScoreStatus] = useState("");
+  const [scoreBusy, setScoreBusy] = useState(false);
+  const startingCash = useRef(loadSave().cash);
+  const rankedSnapshot = useRef<number | null>(null);
   const [cash, setCash] = useState(() => loadSave().cash);
   const [rep, setRep] = useState(() => loadSave().rep);
   const [owned, setOwned] = useState<string[]>(() => loadSave().owned);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [rivals, setRivals] = useState<Rival[]>(() =>
-    RIVAL_NAMES.map((name) => ({ name, cash: 0, done: 0, groundedUntil: 0, job: null, eta: 0 })),
+    rivalNames.map((name) => ({ name, cash: 0, done: 0, groundedUntil: 0, job: null, eta: 0 })),
   );
   const [phase, setPhase] = useState<Phase>({ k: "drive" });
   const [now, setNow] = useState(0);
@@ -190,6 +208,9 @@ function Game() {
       dialog: () => setPhase({ k: "tim", line: TIM_LINES[0] ?? "" }),
       upgrade: () => setOwned((items) => [...new Set([...items, "van"])]),
       close: closeDialog,
+      endMatch: () => setPhase({ k: "over" }),
+      finish: (ok: boolean) => { if (phase.k === "working") finish(phase.job, ok); },
+      get jobs() { return jobsRef.current; },
     };
     Object.assign(window, { __game: debug });
     return () => {
@@ -214,7 +235,7 @@ function Game() {
     const a = makeJob(t, 0);
     setJobs([a, makeJob(t, 0, [a])]);
     setRivals(
-      RIVAL_NAMES.map((name) => ({
+      rivalNames.map((name) => ({
         name,
         cash: loadSave().cash,
         done: 0,
@@ -223,7 +244,7 @@ function Game() {
         eta: 0,
       })),
     );
-    addLog("🏁 10 minutes on the clock — most cash wins. Taylor, Slade and RJ are racing you.");
+    addLog(`🏁 10 minutes on the clock — ${config.technician} ${rivalNames.length ? `vs ${rivalNames.join(", ")}` : "solo practice"}. Most cash wins.`);
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, []);
@@ -233,7 +254,7 @@ function Game() {
 
   // ---- per-tick world: calls, walk-ins, temper, and the rivals' day ----
   useEffect(() => {
-    if (!now) return;
+    if (!now || st.current.phase.k === "over") return;
     const chance = owned.includes("radio") ? 0.22 : 0.12;
     setJobs((js) => {
       let next = js.filter((j) => j.expires > now);
@@ -257,7 +278,7 @@ function Game() {
       if (now < r.groundedUntil) continue;
       if (r.job && now >= r.eta) {
         dirty = true;
-        if (Math.random() > RIVAL_FAIL_CHANCE) {
+        if (Math.random() > balance.fail) {
           r.cash += r.job.pay;
           r.done += 1;
           addLog(
@@ -285,7 +306,7 @@ function Game() {
           dirty = true;
           r.job = j;
           r.eta = now + Math.max(10000, ((distanceFromShop(j) * 2) / RIVAL_SPEED) * 1000 + 8000); // drive there, work, drive back
-          if (Math.random() < RIVAL_RED_CHANCE) {
+          if (Math.random() < balance.red) {
             r.cash -= RED_FINE;
             addLog(`🚦 ${r.name} ran a light on the way — -$${RED_FINE}.`);
           }
@@ -294,7 +315,7 @@ function Game() {
           );
         }
       }
-      if (!r.job && Math.random() < RIVAL_GROUND_CHANCE) {
+      if (!r.job && Math.random() < balance.ground) {
         dirty = true;
         r.groundedUntil = now + GROUND_MS / 2;
         addLog(`😠 Pops grounded ${r.name} — back at the counter for a minute.`);
@@ -310,10 +331,27 @@ function Game() {
     if (claimed.size) setJobs((js) => js.filter((j) => !claimed.has(j.id)));
 
     // match timer
-    if (startedAt.current && now >= startedAt.current + GAME_MS && st.current.phase.k !== "over") {
+    if (startedAt.current && now >= startedAt.current + GAME_MS) {
       setPhase({ k: "over" });
     }
   }, [now, level, owned]);
+
+  const publishScore = useCallback(async () => {
+    if (!config.rankedId || rankedSnapshot.current === null) return;
+    setScoreBusy(true); setScoreStatus("Submitting score…");
+    try {
+      await submitScore({ data: { matchId: config.rankedId, score: rankedSnapshot.current, displayName: config.displayName } });
+      setScoreStatus("Your best score is saved on the global leaderboard.");
+    } catch { setScoreStatus("Score could not be submitted. Retry once the full match has finished."); }
+    finally { setScoreBusy(false); }
+  }, [config.rankedId, config.displayName, submitScore]);
+  useEffect(() => {
+    if (phase.k !== "over" || rankedSnapshot.current !== null) return;
+    // Match earnings exclude previously saved cash, so repeated device saves cannot inflate rankings.
+    rankedSnapshot.current = Math.max(0, Math.round(cash - startingCash.current + 50));
+    if (config.rankedId) void publishScore();
+    else setScoreStatus("Unranked match — sign in from the main menu to rank your next one.");
+  }, [phase.k, cash, config.rankedId, publishScore]);
 
   const onArrive = useCallback((id: number) => {
     const job = jobsRef.current.find((j) => j.id === id);
@@ -401,7 +439,7 @@ function Game() {
   const remaining = startedAt.current ? Math.max(0, startedAt.current + GAME_MS - now) : GAME_MS;
   const clock = `${Math.floor(remaining / 60000)}:${String(Math.floor((remaining % 60000) / 1000)).padStart(2, "0")}`;
   const standings = [
-    ...[{ name: "You", cash, color: "#f2b53a" }],
+    ...[{ name: config.technician, cash, color: "#f2b53a" }],
     ...rivals.map((r) => ({ name: r.name, cash: r.cash, color: RIVAL_COLORS[r.name] ?? "#999" })),
   ].sort((a, b) => b.cash - a.cash);
   const dialog = phase.k !== "drive";
@@ -410,6 +448,8 @@ function Game() {
     <div className="relative h-[100dvh] w-full overflow-hidden bg-background text-foreground">
       <div className="game-scene absolute inset-0 isolate z-0" data-dialog-open={dialog}>
         <City3D
+          technician={config.technician}
+          rivalNames={rivalNames}
           jobs={jobs}
           targetId={target}
           freezeScene={dialog}
@@ -430,6 +470,7 @@ function Game() {
           {BUSINESS}
         </h1>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="sm" className="pointer-events-auto bg-card" onClick={() => { if (window.confirm("Leave this match and return to the main menu?")) onExit(); }}>Menu</Button>
           <Button
             variant="unstyled"
             size="free"
@@ -762,14 +803,15 @@ function Game() {
                   <LockPick
                     pins={phase.job.pins}
                     easy={phase.easy}
+                    difficulty={effectiveDifficulty(config.difficulty, phase.easy)}
                     onDone={(ok) => finish(phase.job, ok)}
                   />
                 )}
                 {JOB_MINIGAME[phase.job.type] === "extract" && (
-                  <KeyExtract easy={phase.easy} onDone={(ok) => finish(phase.job, ok)} />
+                  <KeyExtract easy={phase.easy} difficulty={effectiveDifficulty(config.difficulty, phase.easy)} onDone={(ok) => finish(phase.job, ok)} />
                 )}
                 {JOB_MINIGAME[phase.job.type] === "dial" && (
-                  <SafeDial easy={phase.easy} onDone={(ok) => finish(phase.job, ok)} />
+                  <SafeDial easy={phase.easy} difficulty={effectiveDifficulty(config.difficulty, phase.easy)} onDone={(ok) => finish(phase.job, ok)} />
                 )}
               </>
             )}
@@ -807,37 +849,19 @@ function Game() {
                   ))}
                 </ul>
                 <p className="mt-3 text-sm">
-                  {standings[0]?.name === "You"
+                  {standings[0]?.name === config.technician
                     ? "🏆 You win — best locksmith in town!"
                     : `🏆 ${standings[0]?.name} takes it. Rematch?`}
                 </p>
+                <p role="status" className="mt-3 text-xs text-muted-foreground">{scoreStatus}</p>
+                {config.rankedId && scoreStatus.startsWith("Score could") && <Button variant="outline" disabled={scoreBusy} className="mt-2" onClick={() => void publishScore()}>Retry score submission</Button>}
                 <Button
                   variant="unstyled"
                   size="free"
-                  onClick={() => {
-                    const start = loadSave().cash;
-                    startedAt.current = Date.now();
-                    setNow(Date.now());
-                    setRivals(
-                      RIVAL_NAMES.map((name) => ({
-                        name,
-                        cash: start,
-                        done: 0,
-                        groundedUntil: 0,
-                        job: null,
-                        eta: 0,
-                      })),
-                    );
-                    setTemper(10);
-                    setGroundedUntil(0);
-                    setTimAt(null);
-                    setTarget(null);
-                    setResetVan();
-                    closeDialog();
-                  }}
+                  onClick={onExit}
                   className="mt-4 w-full rounded-lg bg-primary py-3 font-semibold text-primary-foreground"
                 >
-                  New match
+                  Main menu
                 </Button>
               </div>
             )}

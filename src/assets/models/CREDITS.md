@@ -1,4 +1,5 @@
 # CC0 models
+- Technician full-body base, Kenney Blocky Characters 2.0 — https://kenney.nl/assets/blocky-characters and https://opengameart.org/content/blocky-characters — CC0, verified in the downloaded License.txt; customized clothing and accessories.
 - Eastdale Mall commercial building (Building E, Kenney City Kit Commercial), scaled for the mall — https://flockbay.com/assets/building-e-city-kit-commercial/ — CC0-1.0, license verified on source page.
 - Delivery van, Kenney Car Kit — https://flockbay.com/assets/delivery/ — CC0 (Kenney).
 - Tree default, Kenney Nature Kit — https://flockbay.com/assets/tree-default/ — CC0 (Kenney).

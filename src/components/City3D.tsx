@@ -9,6 +9,8 @@ import boardIsland from "@/assets/whiteboard-island.webp.asset.json";
 import boardKite from "@/assets/whiteboard-kite.webp.asset.json";
 import * as THREE from "three";
 import { StreetArt } from "./StreetArt";
+import { TechnicianModel } from "./TechnicianModel";
+import { TECHNICIAN_STYLE, type Technician } from "@/lib/match";
 import { Downtown } from "./Downtown";
 import {
   BLOCK,
@@ -75,6 +77,8 @@ const ACCEL = 20,
 const PARKED = [-6, -2, 2, 6].map((dx) => ({ x: PARKING.x + dx, z: PARKING.z - 3.5 }));
 
 interface Props {
+  technician?: Technician | undefined;
+  rivalNames?: readonly string[];
   jobs: Job[];
   targetId: number | null;
   paused: boolean;
@@ -600,11 +604,13 @@ function Van({
   upgraded,
   input,
   paused,
+  technician,
 }: {
   group: React.RefObject<THREE.Group | null>;
   upgraded: boolean;
   input: React.MutableRefObject<Input>;
   paused: boolean;
+  technician?: Technician | undefined;
 }) {
   const decal = useMemo(vanDecal, []);
   const flame = useRef<THREE.Group>(null);
@@ -630,7 +636,8 @@ function Van({
   return (
     <group ref={group}>
       <Suspense fallback={null}>
-        <DeliveryModel upgraded={upgraded} />
+        <DeliveryModel upgraded={upgraded} {...(technician ? { tint: TECHNICIAN_STYLE[technician].van } : {})} />
+        {technician && <group position={[0.4, 0.45, 0.9]} scale={0.43}><TechnicianModel name={technician} seated /></group>}
       </Suspense>
       {[
         [-0.6, 2.21],
@@ -698,6 +705,8 @@ function Marker({ job, target }: { job: Job; target: boolean }) {
 
 function Sim({
   jobs,
+  technician,
+  rivalNames = RIVAL_NAMES,
   targetId,
   paused,
   speedMul,
@@ -726,15 +735,15 @@ function Sim({
   const cars = useMemo(() => makeTraffic(10), []);
   const rivalCars = useMemo<Car[]>(
     () =>
-      RIVAL_NAMES.map((_, i) => ({
+      rivalNames.map((name, i) => ({
         axis: (i ? "x" : "z") as Car["axis"],
         dir: (i ? 1 : -1) as 1 | -1,
         lane: (ROAD_LINES[i] ?? 10) + (i ? 1.6 : -1.6),
         pos: -WORLD_HALF + i * 40,
         v: CAR_SPEED,
-        color: ["#2f6fd8", "#d23b3b", "#2fa36a"][i] ?? "#2fa36a",
+        color: TECHNICIAN_STYLE[name as Technician]?.van ?? "#2fa36a",
       })),
-    [],
+    [rivalNames],
   );
   const rivalRefs = useRef<(THREE.Group | null)[]>([]);
   const carRefs = useRef<(THREE.Group | null)[]>([]);
@@ -911,7 +920,7 @@ function Sim({
 
   return (
     <>
-      <Van group={van} upgraded={speedMul > 1} input={input} paused={paused} />
+      <Van group={van} upgraded={speedMul > 1} input={input} paused={paused} technician={technician} />
       <group ref={arrow}>
         <mesh rotation-x={Math.PI / 2}>
           <coneGeometry args={[0.5, 1.4, 3]} />
@@ -940,7 +949,7 @@ function Sim({
           <Suspense fallback={null}>
             <DeliveryModel upgraded={false} tint={c.color} />
           </Suspense>
-          <Label name={RIVAL_NAMES[i]!} y={3.4} color="bg-primary text-primary-foreground" />
+          <Label name={rivalNames[i] ?? "Technician"} y={3.4} color="bg-primary text-primary-foreground" />
         </group>
       ))}
       <group ref={jimG}>

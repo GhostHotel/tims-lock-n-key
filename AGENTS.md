@@ -25,3 +25,7 @@
 - Weather timing is a pure game rule driven by the same scene clock as daylight; camera-local rain uses one pooled line buffer, and lens droplets run inside the composer below DOM HUD with no CSS blur or dynamic cube captures.
 - Dev-only window.__weather.setTime(seconds) advances the shared scene clock for dry/rain transition checks; window.__weather.state reports particle visibility and camera-local positioning.
 - Downtown layout (towers, fountain roundabout, park, stadium) is declared in src/lib/game.ts and drawn by src/components/Downtown.tsx; roundabouts share the ROUNDABOUTS list so terrain, dashes and colliders stay aligned.
+- GameApp gates the city, simulation, input and audio behind PLAYING; GameMenu owns selection/config/loading and src/lib/match.ts holds pure match rules to keep menus from starting world loops.
+- TechnicianModel clones the CC0 full-body base and adds shared accessories; selected identity and one stable randomized rival roster flow into the city and match standings.
+- Ranked matches use authenticated SQL start/finish RPCs with ownership, duration, idempotency and bounds checks; public leaderboard reads project safe columns and poll only while menus are visible. Scores exclude previously saved cash; this client-simulated game is not cheat-proof.
+- Dev-only __game.endMatch(), finish(ok), and jobs extend existing playback hooks for match-end and real dispatch checks; accelerated match endings must not bypass ranked server-duration checks.

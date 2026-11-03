@@ -2,16 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { sfx } from "@/lib/sfx";
 import { Button } from "@/components/ui/button";
 import { useGameFrame } from "@/hooks/use-game-frame";
+import { pinTuning, type Difficulty } from "@/lib/match";
 
 // Pins bounce; tap "SET" when the pin is inside the shear line zone.
 export function LockPick({
   pins,
   onDone,
   easy = false,
+  difficulty = "medium",
 }: {
   pins: number;
   onDone: (ok: boolean) => void;
   easy?: boolean;
+  difficulty?: Difficulty;
 }) {
   const [set, setSet] = useState(0);
   const pos = useRef(0);
@@ -21,9 +24,10 @@ export function LockPick({
   const [strikes, setStrikes] = useState(0);
   const [flash, setFlash] = useState<"ok" | "bad" | null>(null);
   const t = useRef(0);
-  const speed = (1.4 + set * 0.35) * (easy ? 0.55 : 1);
-  const lo = easy ? 0.36 : 0.42,
-    hi = easy ? 0.68 : 0.62;
+  const tuning = pinTuning(difficulty, set);
+  const speed = easy && difficulty === "medium" ? tuning.speed * 0.55 : tuning.speed;
+  const lo = easy && difficulty === "medium" ? 0.36 : tuning.lo,
+    hi = easy && difficulty === "medium" ? 0.68 : tuning.hi;
 
   useGameFrame((dt) => {
     if (finished.current) return false;
@@ -52,7 +56,7 @@ export function LockPick({
     } else {
       sfx.buzz();
       setFlash("bad");
-      if (strikes + 1 >= 3) {
+      if (strikes + 1 >= tuning.tries) {
         finished.current = true;
         return onDone(false);
       }
@@ -69,7 +73,7 @@ export function LockPick({
           PINS {set}/{pins}
         </span>
         <span>
-          PICK {"▮".repeat(3 - strikes)}
+          PICK {"▮".repeat(tuning.tries - strikes)}
           {"▯".repeat(strikes)}
         </span>
       </div>
